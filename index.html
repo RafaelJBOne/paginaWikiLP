@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wiki - Sistema P2P em Go</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        header {
+            background-color: #007d9c;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+        }
+        section {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 0 0 8px 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #007d9c;
+            border-bottom: 2px solid #007d9c;
+            padding-bottom: 5px;
+        }
+        code {
+            background-color: #eee;
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-family: "Courier New", Courier, monospace;
+        }
+        ul {
+            list-style-type: square;
+        }
+        .highlight {
+            font-weight: bold;
+            color: #d32f2f;
+        }
+
+        footer {
+            background-color: #007d9c;
+            color: white;
+            text-align: left;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        footer h3 {
+            margin-top: 0;
+        }
+
+        footer ul {
+            list-style: none;
+            padding: 0;
+            margin: none;
+        }
+
+        footer li {
+            margin: none;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Wiki: Projeto P2P GoLang</h1>
+</header>
+
+<section>
+    <h2>1. Introdução Geral</h2>
+    <p>
+        Este projeto consiste em um sistema de <strong>compartilhamento de arquivos ponto-a-ponto (P2P)</strong> com um rastreador (tracker) centralizado. 
+        Desenvolvido inteiramente na linguagem <strong>Go</strong>, o sistema permite que múltiplos "peers" se conectem para compartilhar, buscar e baixar arquivos entre si. 
+        Além da transferência de arquivos, o projeto suporta a troca de mensagens de chat em tempo real e oferece duas formas de interação: uma interface de linha de comando (CLI) e uma interface web acessível via navegador.
+    </p>
+</section>
+
+<section>
+    <h2>2. Por que Go? (Concorrência e Paralelismo)</h2>
+    <p>
+        A escolha da linguagem Go é fundamental para este projeto devido ao seu modelo nativo e eficiente de <strong>concorrência</strong>, que é explorado em funcionalidades críticas:
+    </p>
+    <ul>
+        <li>
+            <strong>Downloads Paralelos Multi-peer:</strong> O sistema utiliza um <code>pool de goroutines</code> para baixar diferentes "chunks" (pedaços) de um arquivo de múltiplos peers simultaneamente. 
+            Isso permite que a largura de banda seja otimizada ao solicitar partes distintas do arquivo para diferentes fontes ao mesmo tempo.
+        </li>
+        <li>
+            <strong>Escrita Não-Bloqueante:</strong> Graças ao uso da função <code>WriteAt</code>, cada <i>goroutine</i> escreve seu pedaço diretamente na posição correta do arquivo de destino. 
+            Como os intervalos de bytes não se sobrepõem, o projeto consegue paralelismo real na escrita sem a necessidade de travas (<i>locks</i>) complexas.
+        </li>
+        <li>
+            <strong>Servidores Simultâneos:</strong> Tanto o Peer quanto o Tracker utilizam <i>goroutines</i> para gerenciar múltiplas conexões TCP de entrada sem travar a execução principal. 
+            No Peer, isso permite que ele envie um arquivo para alguém enquanto recebe uma mensagem de chat ou baixa outro arquivo.
+        </li>
+    </ul>
+</section>
+
+<section>
+    <h2>3. Estrutura Geral do Código</h2>
+    <p>O código está organizado em diretórios modulares, cada um com uma responsabilidade específica:</p>
+    <ul>
+        <li><code>cmd/</code>: Contém os pontos de entrada (arquivos <code>main.go</code>) para iniciar o Tracker e o Peer.</li>
+        <li><code>peer/</code>: Implementa toda a lógica de cliente e servidor do peer, incluindo o gerenciamento de arquivos compartilhados e o motor de download paralelo.</li>
+        <li><code>tracker/</code>: Contém a lógica do servidor central que mantém o índice de quais peers estão online e quais arquivos cada um possui.</li>
+        <li><code>protocol/</code>: Define o protocolo de comunicação baseado em JSON e o sistema de enquadramento (framing) para envio de dados binários (chunks).</li>
+        <li><code>web/</code>: Implementa a interface gráfica simplificada utilizando o servidor HTTP nativo do Go.</li>
+    </ul>
+</section>
+
+<section>
+    <h2>4. Principais Funções</h2>
+    <p>Abaixo estão as funções essenciais que movem o sistema:</p>
+    <ul>
+        <li><code>DownloadFile()</code> (Peer): Orquestra o download paralelo, dividindo o arquivo em pedaços e distribuindo a tarefa entre os <i>workers</i> disponíveis.</li>
+        <li><code>serverLoop()</code> (Peer): Loop infinito que aceita novas conexões de outros peers e dispara uma <i>goroutine</i> (<code>handlePeerRequest</code>) para cada uma.</li>
+        <li><code>Start()</code> (Tracker): Inicia o servidor central e aguarda conexões persistentes dos peers para registro de arquivos.</li>
+        <li><code>AddSharedFile()</code> (Peer): Lê os metadados de um arquivo local e o anuncia para o Tracker, tornando-o disponível para a rede.</li>
+        <li><code>SearchFile()</code> (Peer): Consulta o Tracker para obter uma lista de quais peers possuem um determinado arquivo.</li>
+    </ul>
+</section>
+
+<section>
+    <h2>Desenvolvimento e organização do projeto</h2>
+    <p>O desenvolvimento do projeto foi estruturado de forma modular, permitindo que cada integrante focasse em uma camada específica da arquitetura P2P:</p>
+    <ul>
+        <dl>
+            <strong>Luiz Henrrique(Infraestrutura e Protocolo):</strong> 
+            <dt>
+                Responsável pela base de comunicação do sistema. Desenvolveu o pacote <code>protocol</code>, estabelecendo o sistema de <i>framing</i> (cabeçalhos de 4 bytes) para o envio seguro de mensagens JSON e dados binários. Também implementou o <strong>Tracker</strong>, garantindo que o servidor central conseguisse gerenciar conexões persistentes e indexar arquivos de múltiplos peers simultaneamente.
+            </dt>
+            <li>
+                Implementação: Protocolo e Tracker, garantindo que as mensagens chegassem inteiras e que o índice central funcionasse corretamente
+            </li>
+        </dl><br>
+
+        <dl>
+            <strong>Stefany (Núcleo do Peer e Paralelismo):</strong> 
+            <dt>
+                Focou na lógica central do cliente e na performance de rede. Implementou o motor de <strong>download paralelo por chunks</strong> no pacote <code>peer</code>, utilizando <i>goroutines</i> e o controle de <i>workers</i>. Também foi responsável pela <strong>confiabilidade</strong>, aplicando Mutexes para proteção de dados e a função <code>WriteAt</code> para escritas simultâneas em disco sem conflitos.
+            </dt>
+            <li>
+                Implementação: Lógica do Peer, garantindo que o download fosse rápido através de paralelismo e seguro contra erros de memória ou concorrência
+            </li>        
+        </dl><br>
+
+        <dl>
+            <strong>Rafael de Jesus(Interfaces e Experiência do Usuário):</strong> 
+            <dt>
+                Encarregado das camadas de interação do sistema. Desenvolveu a <strong>Interface Web</strong> (utilizando <code>html/template</code>) para permitir a busca e download de arquivos via navegador. Além disso, implementou a <strong>CLI (Interface de Linha de Comando)</strong>, criando o sistema de <i>tokenização</i> de comandos e a integração das funcionalidades de chat e busca para o usuário final.
+                <li>
+                    Iplementação: Web e CLI, permitindo que qualquer usuário consiga operar o sistema de forma simples, seja por comandos ou por cliques                    
+                </li>
+            </dt>         
+        </dl><br>
+    </ul>
+    <p>A comunicação e organização ocorreu por grupo de trabalho no WhatsApp e reuniões curtas no Discord para alinhamento e gravação do conteúdo final</p>
+</section>
+
+<section>
+    <h2>Fluxograma de arquitetura do projeto</h2><br>
+    
+    <div style="text-align: center; margin-top: 20px;">
+    
+        <img src="Arquitetura_de_Sistema_P2P.jpeg" alt="Fluxograma de Arquitetura P2P" style="width: 100%; height: auto; border-radius: 8px; border: 1px solid #ddd;">
+        
+        <p style="font-size: 0.9em; color: #666; margin-top: 10px;">
+            Legenda: Luíz (Infra/Protocolo), Stefany (Núcleo/Paralelismo) e Rafael (Interfaces).
+        </p>
+    </div>
+    
+</section>
+
+<footer>
+    <h3 style="text-align: center">Projeto Final - Linguagem de Programação</h3>
+    <p><strong>Sistema Peer-to-Peer em Go Lang</strong></p>
+    <p>Professor: Marcelo Ladeira</p>
+
+    <p><strong>Integrantes:</strong></p>
+    <ul>
+        <li>Stefany do Nascimento Torres, Mat:21/2005382</li>
+        <li>Luiz Henrique Figueiredo Soares, Mat:21/1068403</li>
+        <li>Rafael de Jesus Bento Oliveira, Mat:19/0115777</li>
+    </ul>
+</footer>
+
+</body>
+</html>
