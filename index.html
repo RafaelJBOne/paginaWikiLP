@@ -109,6 +109,92 @@
     </ul>
 </section>
 
+<!--Inicio da 2.1-->
+
+<section>
+    <h2>2.1 Comparação Go em relação à linguagem C</h2>
+
+    <p>
+        Embora a linguagem C ofereça alto desempenho e amplo controle sobre os recursos do sistema, o desenvolvimento de uma aplicação P2P envolve desafios relacionados à concorrência, comunicação em rede e gerenciamento de memória, aspectos nos quais Go oferece recursos nativos que reduzem a complexidade do código e aumentam sua confiabilidade.
+    </p>
+
+    <h3>Premissas de usuário e domínio de aplicação</h3>
+
+    <h4>Linguagem C</h4>
+    <p>
+        Para implementar uma aplicação peer-to-peer (P2P) em C, é necessário
+        utilizar bibliotecas externas para concorrência e comunicação em rede,
+        como <code>pthreads</code> e outras abstrações para sockets. Além disso,
+        o gerenciamento de memória deve ser realizado manualmente pelo
+        desenvolvedor.
+    </p>
+
+    <h4>Go</h4>
+    <p>
+        Go disponibiliza bibliotecas nativas como <code>net</code>,
+        <code>sync</code> e <code>encoding/json</code>, permitindo o
+        desenvolvimento completo da aplicação utilizando apenas a biblioteca
+        padrão da linguagem, sem dependências externas.
+    </p>
+
+    <h3>Construtores da linguagem</h3>
+
+    <h4>Linguagem C</h4>
+    <p>
+        A linguagem C não possui mecanismos nativos equivalentes a goroutines,
+        channels ou closures. A concorrência é normalmente implementada por
+        meio de <code>pthread_create</code>, mutexes gerenciados manualmente e
+        callbacks baseados em ponteiros para funções.
+    </p>
+
+    <h4>Go</h4>
+    <p>
+        Go oferece goroutines, channels, <code>sync.Mutex</code> e
+        <code>sync.WaitGroup</code> como recursos nativos. Dessa forma,
+        tarefas concorrentes, como o download paralelo de partes de arquivos
+        entre peers, podem ser implementadas de maneira mais simples e com
+        menos código.
+    </p>
+
+    <h3>Legibilidade e manutenção</h3>
+
+    <h4>Linguagem C</h4>
+    <p>
+        Em C, o desenvolvedor precisa gerenciar manualmente a memória por meio
+        de funções como <code>malloc()</code> e <code>free()</code>, além de
+        manter arquivos de cabeçalho (<code>.h</code>) separados dos arquivos
+        de implementação (<code>.c</code>). O uso frequente de ponteiros e
+        callbacks também aumenta a complexidade do código.
+    </p>
+
+    <h4>Go</h4>
+    <p>
+        Go utiliza coleta automática de lixo (Garbage Collector), dispensa
+        arquivos de cabeçalho e evita ponteiros aritméticos. Essas
+        características contribuem para um código mais legível, reduzindo a
+        quantidade de linhas necessárias e facilitando a manutenção.
+    </p>
+
+    <h3>Confiabilidade</h3>
+
+    <h4>Linguagem C</h4>
+    <p>
+        A linguagem C não oferece mecanismos nativos para detecção de
+        condições de corrida (race conditions). Erros de sincronização podem
+        resultar em falhas de segmentação ou corrupção silenciosa de dados.
+    </p>
+
+    <h4>Go</h4>
+    <p>
+        Go disponibiliza primitivas de sincronização seguras e a ferramenta
+        <code>-race</code>, capaz de detectar condições de corrida durante a
+        execução do programa. Isso contribui para o desenvolvimento de
+        aplicações concorrentes mais robustas e confiáveis.
+    </p>
+</section>
+    
+<!--fim da 2.1-->
+    
 <section>
     <h2>3. Estrutura Geral do Código</h2>
     <p>O código está organizado em diretórios modulares, cada um com uma responsabilidade específica:</p>
